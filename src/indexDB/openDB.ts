@@ -1,6 +1,6 @@
-const getDB = (name: string, version: number = 1) => {
-  return indexedDB.open(name, version);
-};
+import getDB from "./getDB";
+import * as utils from "./utils";
+import Brand from "./migrations/version_1";
 
 const DB = getDB("cars");
 
@@ -10,6 +10,7 @@ DB.onupgradeneeded = (event) => {
       break;
 
     default:
+      // update indexDB
       break;
   }
 };
@@ -18,6 +19,11 @@ DB.onerror = () => {};
 
 DB.onsuccess = () => {
   const connection = DB.result;
+  window.db = connection;
+  window.Brand = Brand
+  window.brand = new window.Brand(window.db);
+  window.wrapPromiseDB = utils.wrapPromiseDB;
+
   connection.onversionchange = () => {
     connection.close();
     alert("Database is outdated, please reload the page.");
@@ -25,15 +31,3 @@ DB.onsuccess = () => {
 };
 
 DB.onblocked = () => {};
-
-const deleteDB = (dbName: string) => {
-  return new Promise((resolve, reject) => {
-    const deleteRequest = indexedDB.deleteDatabase(dbName);
-    deleteRequest.onsuccess = () => {
-      resolve(true);
-    };
-    deleteRequest.onerror = () => {
-      reject(false);
-    };
-  });
-};
